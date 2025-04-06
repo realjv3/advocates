@@ -8,6 +8,8 @@ import {
   timestamp,
   bigint,
 } from "drizzle-orm/pg-core";
+import { createSelectSchema } from "drizzle-zod";
+import { z } from "zod";
 
 const advocates = pgTable("advocates", {
   id: serial("id").primaryKey(),
@@ -22,3 +24,13 @@ const advocates = pgTable("advocates", {
 });
 
 export { advocates };
+
+export const advocateSchema = createSelectSchema(advocates)
+    .extend({
+      phoneNumber: z.coerce.string().min(10)
+          .transform(val => `(${val.slice(0, 3)}) ${val.slice(3, 6)}-${val.slice(6)}`),
+      specialties: z.array(z.string()),
+      createdAt: z.string(),
+    });
+
+export type Advocate = z.infer<typeof advocateSchema>;
